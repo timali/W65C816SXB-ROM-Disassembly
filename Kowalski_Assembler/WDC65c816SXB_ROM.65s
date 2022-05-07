@@ -118,7 +118,7 @@ SYSTEM_VIA_ACR              = $7FEB ; Auxilliary control register
 SYSTEM_VIA_PCR              = $7FEC ; Peripheral control register
 ;SYSTEM_VIA_IFR             = $7FED ; Interrupt flag register
 ;SYSTEM_VIA_IER             = $7FEE ; Interrupt enable register
-;SYSTEM_VIA_ORA_IRA	        = $7FEF ; Port A IO register, but no handshake
+;SYSTEM_VIA_ORA_IRA         = $7FEF ; Port A IO register, but no handshake
 
         ; FLASH contents start here.
         .ORG $8000
@@ -1045,7 +1045,7 @@ Dbg_Cmd_9_Read_Byte_and_BRK:
         ; The following code is apparently never executed. See DBG_CMD_8_BRK
         ; regarding an 8-bit immediate LDA and BRK vs. a 16-bit immediate LDA.
         LDA     #$00
-        .DB     $00
+        .DB     $00 ; Single-byte BRK instruction.
 
         ; This is not executed because of the BRK above.
         jmp     Sys_VIA_USB_Char_TX
@@ -1572,8 +1572,8 @@ Do_Nothing_Subroutine_3:
         .ORG $FFE0
 
         ; 65816 Native-Mode Vectors
-RSVD_FFE0   .WORD   $FFFF               ; $FFE0
-RSVD_FFE2   .WORD   $FFFF               ; $FFE2
+RSVD_FFE0:  .WORD   $FFFF               ; $FFE0
+RSVD_FFE2:  .WORD   $FFFF               ; $FFE2
 COP_816:    .WORD   COP_816_entry       ; $FFE4
 BRK_816:    .WORD   BRK_816_entry       ; $FFE6
 ABORT_816:  .WORD   ABORT_816_entry     ; $FFE8

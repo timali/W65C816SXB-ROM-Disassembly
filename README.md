@@ -2,13 +2,6 @@
 
 Based on original work by "Keith": https://hackaday.io/project/177384-w65c816sxb-investigation.
 
-Source is currently designed to be assembed by the latest 65816-enabled version of the
-"6502 Macroassembler & Assembler", originally by Michael Kowalski, but enhanced by Daryl
-Richter to add 65816 support (https://sbc.rictor.org/kowalski.html).
-
-A CC65 version (https://cc65.github.io/) is in progress, and once complete, it will become the main
-version going forward.
-
 # Overview
 The W65C816SXB is a single-board computer utilizing the W65816 microprocessor. The board has 32 KB SRAM and 128 KB flash memory. The 128 KB flash memory is partitioned into four banks, one of which is accessible at a time in the address range $8000 - $FFFF.
 
@@ -18,6 +11,20 @@ Very little information is publicly available about the monitor, for example, wh
 
  1. Understand how the monitor works, especially in terms of what resources it uses.
  2. Have the ability to use the monitor and debugger on other hardware projects.
+
+ # Source Overview
+
+ There are two versions of the source code:
+
+ ## CC65-Assembler Version
+
+ The CC65 version is assembled and linked with the CC65 utilities (https://cc65.github.io/). In addition
+ to the disassembled code, there is a linker config file, and a couple of small batch files for making and
+ cleaning the code.
+
+ ## Kowalski/Richter-Assembler Version
+
+There is a version designed to be assembed by the latest 65816-enabled version of the "6502 Macroassembler & Assembler", originally by Michael Kowalski, but enhanced by Daryl Richter to add 65816 support (https://sbc.rictor.org/kowalski.html). This version is self-contained, and does not need a linker config file.
 
 # Debugging Interface Hardware Overview
 The monitor code interacts with a W65C22S6 (VIA), which is connected to an FTDI FT245RL USB FIFO. Together, these components act like a reliable and very high-speed UART connection to the host PC, complete with flow control. This allows the debugger and monitor to communicate at a very high speed (>800 kbit/sec).
