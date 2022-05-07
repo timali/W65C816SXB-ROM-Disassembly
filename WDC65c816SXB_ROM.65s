@@ -120,10 +120,6 @@ SYSTEM_VIA_PCR              = $7FEC ; Peripheral control register
 ;SYSTEM_VIA_IER             = $7FEE ; Interrupt enable register
 ;SYSTEM_VIA_ORA_IRA	        = $7FEF ; Port A IO register, but no handshake
 
-        ; Start off by filling the entire ROM region with $FF.
-        .ORG $8000
-        .DCB $8000, $FF
-
         ; FLASH contents start here.
         .ORG $8000
 
@@ -1570,18 +1566,24 @@ Do_Nothing_Subroutine_3:
         rts
         RTS
 
-        .ORG $FFE4
+        ; These are unused bytes in the flash ROM.
+        .DCB 31081,$FF
+
+        .ORG $FFE0
+
         ; 65816 Native-Mode Vectors
+RSVD_FFE0   .WORD   $FFFF               ; $FFE0
+RSVD_FFE2   .WORD   $FFFF               ; $FFE2
 COP_816:    .WORD   COP_816_entry       ; $FFE4
 BRK_816:    .WORD   BRK_816_entry       ; $FFE6
 ABORT_816:  .WORD   ABORT_816_entry     ; $FFE8
 NMI_816:    .WORD   NMI_816_entry       ; $FFEA
 RSVD_FFEC:  .WORD   Infinite_Loop_2     ; $FFEC
 IRQ_816:    .WORD   IRQ_816_entry       ; $FFEE
-RSVD_FFF0:  .WORD   Infinite_Loop       ; $FFF0
-RSVD_FFF2:  .WORD   Infinite_Loop       ; $FFF2
 
         ; 65C02 Emulation-Mode Vectors
+RSVD_FFF0:  .WORD   Infinite_Loop       ; $FFF0
+RSVD_FFF2:  .WORD   Infinite_Loop       ; $FFF2
 COP_02:     .WORD   COP_02_entry        ; $FFF4
 RSVD_FFF6:  .WORD   Infinite_Loop       ; $FFF6
 ABORT_02:   .WORD   ABORT_02_entry      ; $FFF8
