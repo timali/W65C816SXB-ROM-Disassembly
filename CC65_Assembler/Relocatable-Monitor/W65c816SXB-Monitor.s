@@ -23,7 +23,7 @@
         .import __WORK_RAM_LOAD__
         .import __SHADOW_VECTORS_LOAD__
         .import __SHADOW_VECTORS_SIZE__
-        .import __CODE_LOAD__
+        .import __MONITOR_HEADER_LOAD__
         .import __CPU_VECTORS_LOAD__
 
 ; Export some useful symbols so they are shown in the map file.
@@ -50,7 +50,6 @@
         .export SHADOW_VEC_COP_02
         .export SHADOW_VEC_ABORT_02
         .export SHADOW_VEC_IRQ_02
-        .export Monitor_Start
         .export Pointer_Table
         .export RESET_entry
 
@@ -178,10 +177,10 @@ SYSTEM_VIA_PCR          := __VIA_USB_ADDR__ + $0C ; Peripheral control register
 ;SYSTEM_VIA_IER         := __VIA_USB_ADDR__ + $0E ; Interrupt enable register
 ;SYSTEM_VIA_ORA_IRA     := __VIA_USB_ADDR__ + $0F ; Port A IO register, but no handshake
 
-        ; This is the start of the monitor code, placed in the code section.
-        .code
+        ; The monitor should begin with a header which includes a signature and version.
+        .segment "MONITOR_HEADER"
 
-Monitor_Start:
+        ; A Western Design Center mark at the beginning of the header.
         .byte   "WDC"
         .BYTE   $FF
 
@@ -193,21 +192,15 @@ Monitor_Version_String:
         .byte   ".0.4.3Version Date = Wed Mar 26"
         .byte   " 2014  2:46", $00
 
-        ; Unused data in the monitor version string area.
-        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-        .byte   $FF,$FF,$FF,$FF,$FF,$FF,$FF,$FF
-        .BYTE   $FF,$FF,$FF,$FF,$FF,$FF
+        .segment "POINTER_TABLE"
 
-; A table of important pointers. This is located at address $8080, and
-; is 128 bytes long in total, but not all of it is used. Not sure if the
-; debugger uses this table for any reason, but user applications could
-; use it, for example, to read and write to the USB FIFO.
+; A table of important pointers. This is located at a fixed address $80 bytes
+; into the monitor code, and is 128 bytes long in total. Not sure if the debugger
+; uses this table for any reason, but user applications could use it, for example,
+; to read and write to the USB FIFO. There is room for more pointers at the end.
 Pointer_Table:
 
-    ; Used entries in the pointer table.
+        ; Used entries in the pointer table.
         .addr   Signature_String
         .addr   Initialize_System
         .addr   Is_VIA_USB_RX_Data_Avail
@@ -221,20 +214,8 @@ Pointer_Table:
         .addr   BRK_816_Entry_Vector_Default
         .addr   NMI_816_Entry_Vector_Default
 
-        ; Unused entries in the pointer table.
-        .addr   $FFFF, $FFFF, $FFFF, $FFFF
-        .addr   $FFFF, $FFFF, $FFFF, $FFFF
-        .addr   $FFFF, $FFFF, $FFFF, $FFFF
-        .addr   $FFFF, $FFFF, $FFFF, $FFFF
-        .addr   $FFFF, $FFFF, $FFFF, $FFFF
-        .addr   $FFFF, $FFFF, $FFFF, $FFFF
-        .addr   $FFFF, $FFFF, $FFFF, $FFFF
-        .addr   $FFFF, $FFFF, $FFFF, $FFFF
-        .addr   $FFFF, $FFFF, $FFFF, $FFFF
-        .addr   $FFFF, $FFFF, $FFFF, $FFFF
-        .addr   $FFFF, $FFFF, $FFFF, $FFFF
-        .addr   $FFFF, $FFFF, $FFFF, $FFFF
-        .addr   $FFFF, $FFFF, $FFFF, $FFFF
+        ; This is the start of the actual monitor code, placed in the code section.
+        .code
 
 ; Called directly from FLASH vector on IRQ in emulation mode. IRQ and BRK
 ; are shared in this mode, so jump to monitor code which checks for BRK.
@@ -875,12 +856,12 @@ Dbg_Cmd_4_Sys_Info:
         LDA     #^__WORK_RAM_LOAD__
         jsr     Sys_VIA_USB_Char_TX
 
-        ; Send the monitor code starting address.
-        lda     #<__CODE_LOAD__
+        ; Send the monitor starting address.
+        lda     #<__MONITOR_HEADER_LOAD__
         jsr     Sys_VIA_USB_Char_TX
-        lda     #>__CODE_LOAD__
+        lda     #>__MONITOR_HEADER_LOAD__
         jsr     Sys_VIA_USB_Char_TX
-        lda     #^__CODE_LOAD__
+        lda     #^__MONITOR_HEADER_LOAD__
         JSR     Sys_VIA_USB_Char_TX
 
         ; Shadow vector start (24-bit address, LSB-first).
