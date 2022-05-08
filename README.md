@@ -23,7 +23,7 @@ Very little information is publicly available about the monitor, for example, wh
  addresses, so it is easy to understand, and to use a reference when looking at the factory ROM image. In 
  addition to the disassembled code, there is a linker config file, and a couple of small batch files for making and cleaning the code.
 
- ## CC65-Assembler, Relocatble Version
+ ## CC65-Assembler, Relocatable Version
 
  This is another CC65 version. It is relocatable by modifying the linger config file, which is useful if
  you want to modify the monitor code, or especially if you want to rebuild it to run on different hardware.
