@@ -1,3 +1,3 @@
 del listing.txt
 del *.o
-del W65C816SXB-ROM.bin
+del W65c816SXB-ROM.bin

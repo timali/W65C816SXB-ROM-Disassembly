@@ -14,117 +14,131 @@
 ; into the ZP save area in work RAM (RAM_ZP_SAVE), and restored before
 ; control is returned to the user's program, so their use by the debugger
 ; and monitor is transparent to the user.
-DBG_VAR_00                  := $00
-DBG_VAR_01                  := $01
-DBG_VAR_02                  := $02
-DBG_VAR_03                  := $03
-DBG_VAR_04                  := $04
+
+        .zeropage
+
+; Varibales used by the debugger. They are copied and restored to work-
+; RAM, so their usage is transparent to the user's application.
+DBG_VAR_00:                     .res 1
+DBG_VAR_01:                     .res 1
+DBG_VAR_02:                     .res 1
+DBG_VAR_03:                     .res 1
+DBG_VAR_04:                     .res 1
+
+        .segment "WORK_RAM"
 
 ; Save-area in work-RAM for A.
-RAM_A_SAVE                  := $7E00
+RAM_A_SAVE:                     .res 2
 
 ; Save-area in work-RAM for X.
-RAM_X_SAVE                  := $7E02
+RAM_X_SAVE:                     .res 2
 
 ; Save-area in work-RAM for Y.
-RAM_Y_SAVE                  := $7E04
+RAM_Y_SAVE:                     .res 2
 
 ; Save-area in work-RAM for PC.
-RAM_PC_SAVE                 := $7E06
+RAM_PC_SAVE:                    .res 2
 
 ; Save-area in work-RAM for DP.
-RAM_DP_SAVE                 := $7E08
+RAM_DP_SAVE:                    .res 2
 
 ; Save-area in work-RAM for the stack pointer.
-RAM_SP_SAVE                 := $7E0A
+RAM_SP_SAVE:                    .res 2
 
 ; Save-area in work-RAM for the P register.
-RAM_P_SAVE                  := $7E0C
+RAM_P_SAVE:                     .res 1
 
 ; Save-area in work-RAM for the emulation bit. This can be thought of
 ; as an extenstion bit to P. If E=1, the CPU is in emulation mode.
-RAM_E_SAVE                  := $7E0D
+RAM_E_SAVE:                     .res 1
 
 ; Save-area in work-RAM for the PB register.
-RAM_PB_SAVE                 := $7E0E
+RAM_PB_SAVE:                    .res 1
 
 ; Save-area in work-RAM for the DB register.
-RAM_DB_SAVE                 := $7E0F
+RAM_DB_SAVE:                    .res 1
 
 ; The auto-detected CPU type (0=65C02, 1=65816).
-RAM_CPU_TYPE                := $7E10
+RAM_CPU_TYPE:                   .res 1
 
 ; 1 if the the monitor is currently being executed, 0 if user code.
-RAM_IN_MONITOR              := $7E11
+RAM_IN_MONITOR:                 .res 2
 
 ; Why control has returned to the ROM monitor:
 ;    2: A BRK instruction was executed.
 ;    7: An NMI was generated.
-RAM_ENTER_MONITOR_REASON    := $7E13
+RAM_ENTER_MONITOR_REASON :      .res 1
 
 ; Five-byte area where $00-$04 are saved.
-RAM_ZP_SAVE                 := $7E14
+RAM_ZP_SAVE:                    .res 5
 
 ; Flag variable at $7E19 of unknown use. It only ever gets set to 0.
-RAM_VAR_7E19                := $7E19
+RAM_VAR_7E19:                   .res 1
 
 ; Variable at $7E1A of unknown use. It gets set to 0, and apparently not used.
-RAM_VAR_7E1A                := $7E1A
+RAM_VAR_7E1A:                   .res 2
 
 ; Save-area in work-RAM for the system VIA's registers.
-RAM_PCR_SAVE                := $7E1C
-RAM_DDRB_SAVE               := $7E1D
-RAM_DDRA_SAVE               := $7E1E
+RAM_PCR_SAVE:                   .res 1
+RAM_DDRB_SAVE:                  .res 1
+RAM_DDRA_SAVE:                  .res 1
+
+        .segment "RAW_VECTORS"
 
 ; Vectors in RAM which are called directly from the vectors in FLASH.
 ; These vectors are typically not overridden by the user, since they
 ; perform critical system and debugger operations.
-IRQ_02_ENTRY_VECTOR         := $7E70
-NMI_02_ENTRY_VECTOR         := $7E72
-BRK_816_ENTRY_VECTOR        := $7E74
-NMI_816_ENTRY_VECTOR        := $7E76
+IRQ_02_ENTRY_VECTOR:            .res 2
+NMI_02_ENTRY_VECTOR:            .res 2
+BRK_816_ENTRY_VECTOR:           .res 2
+NMI_816_ENTRY_VECTOR:           .res 2
 
-; The start of the shadow vectors. There are 14 in total. Not all are used.
-SHADOW_VECTOR_START         := $7EE4
+        .import __SHADOW_VECTORS_LOAD__
+        .segment "SHADOW_VECTORS"
 
 ; Shadow vectors for 816 mode, which the user may set to hook the vector.
-SHADOW_VEC_COP_816          := $7EE4
-SHADOW_VEC_BRK_816          := $7EE6 ; unused?
-SHADOW_VEC_ABORT_816        := $7EE8
-SHADOW_VEC_NMI_816          := $7EEA ; unused?
-SHADOW_VEC_RSVD_816         := $7EEC ; unused?
-SHADOW_VEC_IRQ_816          := $7EEE
+SHADOW_VEC_COP_816:             .res 2
+SHADOW_VEC_BRK_816:             .res 2 ; unused
+SHADOW_VEC_ABORT_816:           .res 2
+SHADOW_VEC_NMI_816:             .res 2 ; unused
+SHADOW_VEC_RSVD_816:            .res 2 ; unused
+SHADOW_VEC_IRQ_816:             .res 2
 
 ; Shadow vectors for the 65816 running in '02 emulation mode.
-SHADOW_VEC_RSVD1_02         := $7EF0 ; unused
-SHADOW_VEC_RSVD2_02         := $7EF2 ; unused
-SHADOW_VEC_COP_02           := $7EF4
-SHADOW_VEC_RSVD3_02         := $7EF6 ; unused
-SHADOW_VEC_ABORT_02         := $7EF8
+SHADOW_VEC_RSVD1_02:            .res 2 ; unused
+SHADOW_VEC_RSVD2_02:            .res 2 ; unused
+SHADOW_VEC_COP_02:              .res 2
+SHADOW_VEC_RSVD3_02:            .res 2 ; unused
+SHADOW_VEC_ABORT_02:            .res 2
 
 ; Shadow vectors for all 65xx processors.
-SHADOW_VEC_NMI_02           := $7EFA ; unused
-SHADOW_VEC_RESET_02         := $7EFC ; unused
-SHADOW_VEC_IRQ_02           := $7EFE
+SHADOW_VEC_NMI_02:              .res 2 ; unused
+SHADOW_VEC_RESET_02:            .res 2 ; unused
+SHADOW_VEC_IRQ_02:              .res 2
+
+        .segment "VIA_USB"
 
 ; IO for the VIA which is used for the USB debugger interface.
 ; Unused registers are commented-out.
-SYSTEM_VIA_IOB              := $7FE0 ; Port B IO register
-SYSTEM_VIA_IOA              := $7FE1 ; Port A IO register
-SYSTEM_VIA_DDRB             := $7FE2 ; Port B data direction register
-SYSTEM_VIA_DDRA             := $7FE3 ; Port A data direction register
-;SYSTEM_VIA_T1C_L           := $7FE4 ; Timer 1 counter/latches, low-order
-;SYSTEM_VIA_T1C_H           := $7FE5 ; Timer 1 high-order counter
-;SYSTEM_VIA_T1L_L           := $7FE6 ; Timer 1 low-order latches
-;SYSTEM_VIA_T1L_H           := $7FE7 ; Timer 1 high-order latches
-;SYSTEM_VIA_T2C_L           := $7FE8 ; Timer 2 counter/latches, lower-order
-;SYSTEM_VIA_T2C_H           := $7FE9 ; Timer 2 high-order counter
-;SYSTEM_VIA_SR              := $7FEA ; Shift register
-SYSTEM_VIA_ACR              := $7FEB ; Auxilliary control register
-SYSTEM_VIA_PCR              := $7FEC ; Peripheral control register
-;SYSTEM_VIA_IFR             := $7FED ; Interrupt flag register
-;SYSTEM_VIA_IER             := $7FEE ; Interrupt enable register
-;SYSTEM_VIA_ORA_IRA         := $7FEF ; Port A IO register, but no handshake
+SYSTEM_VIA_IOB:                 .res 1 ; Port B IO register
+SYSTEM_VIA_IOA:                 .res 1 ; Port A IO register
+SYSTEM_VIA_DDRB:                .res 1 ; Port B data direction register
+SYSTEM_VIA_DDRA:                .res 1 ; Port A data direction register
+SYSTEM_VIA_T1C_L:               .res 1 ; (Unused) Timer 1 counter/latches, low-order
+SYSTEM_VIA_T1C_H:               .res 1 ; (Unused) Timer 1 high-order counter
+SYSTEM_VIA_T1L_L:               .res 1 ; (Unused) Timer 1 low-order latches
+SYSTEM_VIA_T1L_H:               .res 1 ; (Unused) Timer 1 high-order latches
+SYSTEM_VIA_T2C_L:               .res 1 ; (Unused) Timer 2 counter/latches, lower-order
+SYSTEM_VIA_T2C_H:               .res 1 ; (Unused) Timer 2 high-order counter
+SYSTEM_VIA_SR:                  .res 1 ; (Unused) Shift register
+SYSTEM_VIA_ACR:                 .res 1 ; Auxilliary control register
+SYSTEM_VIA_PCR:                 .res 1 ; Peripheral control register
+SYSTEM_VIA_IFR:                 .res 1 ; (Unused) Interrupt flag register
+SYSTEM_VIA_IER:                 .res 1 ; (Unused) Interrupt enable register
+SYSTEM_VIA_ORA_IRA:             .res 1 ; (Unused) Port A IO register, but no handshake
+
+        ; This is the start of the monitor code, placed in the code section.
+        .code
 
 Monitor_Start:
         .byte   "WDC"
@@ -390,7 +404,7 @@ Continue_System_Init:
         lda     #<Infinite_Loop
         ldx     #$1C
 @lsb_loop:
-        sta     SHADOW_VECTOR_START-2,x
+        sta     __SHADOW_VECTORS_LOAD__-2,x
         dex
         dex
         BNE     @lsb_loop
@@ -399,7 +413,7 @@ Continue_System_Init:
         lda     #>Infinite_Loop
         ldx     #$1C
 @msb_loop:
-        sta     SHADOW_VECTOR_START-1,x
+        sta     __SHADOW_VECTORS_LOAD__-1,x
         dex
         dex
         BNE     @msb_loop
@@ -824,9 +838,9 @@ Dbg_Cmd_4_Sys_Info:
         JSR     Sys_VIA_USB_Char_TX
 
         ; Shadow vector start (24-bit address, LSB-first).
-        lda     #<SHADOW_VECTOR_START
+        lda     #<__SHADOW_VECTORS_LOAD__
         jsr     Sys_VIA_USB_Char_TX
-        LDA     #>SHADOW_VECTOR_START
+        LDA     #>__SHADOW_VECTORS_LOAD__
         JSR     Sys_VIA_USB_Char_TX
         lda     #$00
         JSR     Sys_VIA_USB_Char_TX
@@ -1586,10 +1600,7 @@ Do_Nothing_Subroutine_3:
         rts
         RTS
 
-        ; These are unused bytes in the flash ROM.
-        .RES 31081,$FF
-
-        .ORG $FFE0
+        .segment "CPU_VECTORS"
 
         ; 65816 Native-Mode Vectors
 RSVD_FFE0:  .addr   $FFFF               ; $FFE0

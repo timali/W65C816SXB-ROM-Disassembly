@@ -14,13 +14,20 @@ Very little information is publicly available about the monitor, for example, wh
 
  # Source Overview
 
- There are two versions of the source code:
+ There are three versions of the source code:
 
- ## CC65-Assembler Version
+ ## CC65-Assembler, Factory Image Reference Version
 
- The CC65 version is assembled and linked with the CC65 utilities (https://cc65.github.io/). In addition
- to the disassembled code, there is a linker config file, and a couple of small batch files for making and
- cleaning the code.
+ This CC65 version is assembled and linked with the CC65 utilities (https://cc65.github.io/). It serves as
+ a reference for the byte-exact disassembly of the factory ROM image version "2.0.4.3". It uses fixed
+ addresses, so it is easy to understand, and to use a reference when looking at the factory ROM image. In 
+ addition to the disassembled code, there is a linker config file, and a couple of small batch files for making and cleaning the code.
+
+ ## CC65-Assembler, Relocatble Version
+
+ This is another CC65 version. It is relocatable by modifying the linger config file, which is useful if
+ you want to modify the monitor code, or especially if you want to rebuild it to run on different hardware.
+ Currently, it is configured to build an exact duplicate of the factory image.
 
  ## Kowalski/Richter-Assembler Version
 

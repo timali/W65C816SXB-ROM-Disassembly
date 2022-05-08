@@ -1,6 +1,6 @@
 ca65 V2.19 - Git 451acb3
-Main file   : WDC65c816SXB_ROM.s
-Current file: WDC65c816SXB_ROM.s
+Main file   : W65c816SXB-ROM.s
+Current file: W65c816SXB-ROM.s
 
 000000r 1               ; Disassembly of W65816SXB SBC monitor ROM.
 000000r 1               ; Alicie, 2022, based on original work by "Keith".
@@ -1620,25 +1620,23 @@ Current file: WDC65c816SXB_ROM.s
 00067Br 1  FF FF FF FF  
 00067Fr 1  FF FF FF FF  
 007FE0r 1               
-007FE0r 1                       .ORG $FFE0
-00FFE0  1               
-00FFE0  1                       ; 65816 Native-Mode Vectors
-00FFE0  1  FF FF        RSVD_FFE0:  .addr   $FFFF               ; $FFE0
-00FFE2  1  FF FF        RSVD_FFE2:  .addr   $FFFF               ; $FFE2
-00FFE4  1  rr rr        COP_816:    .addr   COP_816_entry       ; $FFE4
-00FFE6  1  rr rr        BRK_816:    .addr   BRK_816_entry       ; $FFE6
-00FFE8  1  rr rr        ABORT_816:  .addr   ABORT_816_entry     ; $FFE8
-00FFEA  1  rr rr        NMI_816:    .addr   NMI_816_entry       ; $FFEA
-00FFEC  1  rr rr        RSVD_FFEC:  .addr   Infinite_Loop_2     ; $FFEC
-00FFEE  1  rr rr        IRQ_816:    .addr   IRQ_816_entry       ; $FFEE
-00FFF0  1               
-00FFF0  1                       ; 65C02 Emulation-Mode Vectors
-00FFF0  1  rr rr        RSVD_FFF0:  .addr   Infinite_Loop       ; $FFF0
-00FFF2  1  rr rr        RSVD_FFF2:  .addr   Infinite_Loop       ; $FFF2
-00FFF4  1  rr rr        COP_02:     .addr   COP_02_entry        ; $FFF4
-00FFF6  1  rr rr        RSVD_FFF6:  .addr   Infinite_Loop       ; $FFF6
-00FFF8  1  rr rr        ABORT_02:   .addr   ABORT_02_entry      ; $FFF8
-00FFFA  1  rr rr        NMI_02:     .addr   NMI_02_entry        ; $FFFA
-00FFFC  1  rr rr        RESET:      .addr   RESET_entry         ; $FFFC
-00FFFE  1  rr rr        IRQ_02:     .addr   IRQ_02_entry        ; $FFFE
-00FFFE  1               
+007FE0r 1                       ; 65816 Native-Mode Vectors
+007FE0r 1  FF FF        RSVD_FFE0:  .addr   $FFFF               ; $FFE0
+007FE2r 1  FF FF        RSVD_FFE2:  .addr   $FFFF               ; $FFE2
+007FE4r 1  rr rr        COP_816:    .addr   COP_816_entry       ; $FFE4
+007FE6r 1  rr rr        BRK_816:    .addr   BRK_816_entry       ; $FFE6
+007FE8r 1  rr rr        ABORT_816:  .addr   ABORT_816_entry     ; $FFE8
+007FEAr 1  rr rr        NMI_816:    .addr   NMI_816_entry       ; $FFEA
+007FECr 1  rr rr        RSVD_FFEC:  .addr   Infinite_Loop_2     ; $FFEC
+007FEEr 1  rr rr        IRQ_816:    .addr   IRQ_816_entry       ; $FFEE
+007FF0r 1               
+007FF0r 1                       ; 65C02 Emulation-Mode Vectors
+007FF0r 1  rr rr        RSVD_FFF0:  .addr   Infinite_Loop       ; $FFF0
+007FF2r 1  rr rr        RSVD_FFF2:  .addr   Infinite_Loop       ; $FFF2
+007FF4r 1  rr rr        COP_02:     .addr   COP_02_entry        ; $FFF4
+007FF6r 1  rr rr        RSVD_FFF6:  .addr   Infinite_Loop       ; $FFF6
+007FF8r 1  rr rr        ABORT_02:   .addr   ABORT_02_entry      ; $FFF8
+007FFAr 1  rr rr        NMI_02:     .addr   NMI_02_entry        ; $FFFA
+007FFCr 1  rr rr        RESET:      .addr   RESET_entry         ; $FFFC
+007FFEr 1  rr rr        IRQ_02:     .addr   IRQ_02_entry        ; $FFFE
+007FFEr 1               
