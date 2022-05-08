@@ -126,6 +126,11 @@ SYSTEM_VIA_PCR              := $7FEC ; Peripheral control register
 ;SYSTEM_VIA_IER             := $7FEE ; Interrupt enable register
 ;SYSTEM_VIA_ORA_IRA         := $7FEF ; Port A IO register, but no handshake
 
+        ; Not strictly required because we specify the flash offset in the linker
+        ; config, but this generates absolute addresses in the listing file, which
+        ; makes it easier to read and understand.
+        .org $8000
+
 Monitor_Start:
         .byte   "WDC"
         .BYTE   $FF
