@@ -3,6 +3,17 @@
 
     .OPT Proc65816
 
+; Definitions used in sending info about the monitor (debug command 4).
+BOARD_ID                    = $58
+WORK_RAM_START              = $7E00
+SHADOW_VECTOR_START         = $7EE4
+SHADOW_VECTOR_SIZE          = $01C
+MONITOR_CODE_START          = $8000
+CPU_VECTOR_START            = $FFE4
+HW_IO_START                 = $7F00
+HW_IO_SIZE                  = $0100
+HW_BRK_ADDR                 = $FFFFFF
+
 ; Zero-page variables that are temporarily used when executing commands
 ; from the debugger. When the monitor is entered, their values are saved
 ; into the ZP save area in work RAM (RAM_ZP_SAVE), and restored before
@@ -77,9 +88,6 @@ IRQ_02_ENTRY_VECTOR         = $7E70
 NMI_02_ENTRY_VECTOR         = $7E72
 BRK_816_ENTRY_VECTOR        = $7E74
 NMI_816_ENTRY_VECTOR        = $7E76
-
-; The start of the shadow vectors. There are 14 in total. Not all are used.
-SHADOW_VECTOR_START         = $7EE4
 
 ; Shadow vectors for 816 mode, which the user may set to hook the vector.
 SHADOW_VEC_COP_816          = $7EE4
@@ -788,11 +796,11 @@ Dbg_Cmd_3_Read_Mem:
 Dbg_Cmd_4_Sys_Info:
         ; Send $00:7E00 to the debugger, which is the start of the monitor
         ; work-RAM. This same address is also sent later, for some reason.
-        lda     #$00
+        lda     #<WORK_RAM_START
         jsr     Sys_VIA_USB_Char_TX
-        lda     #$7E
+        lda     #>WORK_RAM_START
         jsr     Sys_VIA_USB_Char_TX
-        lda     #$00
+        LDA     #{WORK_RAM_START>>16}
         JSR     Sys_VIA_USB_Char_TX
 
         ; Auto-detected CPU type.
@@ -800,23 +808,25 @@ Dbg_Cmd_4_Sys_Info:
         JSR     Sys_VIA_USB_Char_TX
 
         ; Board ID.
-        lda     #$58
+        lda     #BOARD_ID
         JSR     Sys_VIA_USB_Char_TX
 
-        ; Send $00:7E00 to the debugger again.
-        lda     #$00
+        ; Send the work-RAM start address again. Not sure why, but this copy is
+        ; the value that is displayed in the "Target Connection Information"
+        ; screen on the debugger, so this copy is used, and not ignored.
+        lda     #<WORK_RAM_START
         jsr     Sys_VIA_USB_Char_TX
-        lda     #$7E
+        lda     #>WORK_RAM_START
         jsr     Sys_VIA_USB_Char_TX
-        LDA     #$00
+        LDA     #{WORK_RAM_START>>16}
         jsr     Sys_VIA_USB_Char_TX
 
-        ; Send the monitor ROM address ($00:8000).
-        lda     #$00
+        ; Send the monitor code starting address.
+        lda     #<MONITOR_CODE_START
         jsr     Sys_VIA_USB_Char_TX
-        lda     #$80
+        lda     #>MONITOR_CODE_START
         jsr     Sys_VIA_USB_Char_TX
-        lda     #$00
+        lda     #{MONITOR_CODE_START>>16}
         JSR     Sys_VIA_USB_Char_TX
 
         ; Shadow vector start (24-bit address, LSB-first).
@@ -824,47 +834,47 @@ Dbg_Cmd_4_Sys_Info:
         jsr     Sys_VIA_USB_Char_TX
         LDA     #>SHADOW_VECTOR_START
         JSR     Sys_VIA_USB_Char_TX
-        lda     #$00
+        lda     #{SHADOW_VECTOR_START>>16}
         JSR     Sys_VIA_USB_Char_TX
 
-        ; Send the hardware base IO address ($00:7F00).
-        lda     #$00
+        ; Shadow vector end address + 1.
+        lda     #<{SHADOW_VECTOR_START + SHADOW_VECTOR_SIZE}
         jsr     Sys_VIA_USB_Char_TX
-        lda     #$7F
+        lda     #>{SHADOW_VECTOR_START + SHADOW_VECTOR_SIZE}
         jsr     Sys_VIA_USB_Char_TX
-        LDA     #$00
-        jsr     Sys_VIA_USB_Char_TX
-
-        ; Send the hardware vector address ($00:FFE4).
-        lda     #$E4
-        jsr     Sys_VIA_USB_Char_TX
-        lda     #$FF
-        jsr     Sys_VIA_USB_Char_TX
-        LDA     #$00
+        LDA     #{{SHADOW_VECTOR_START + SHADOW_VECTOR_SIZE}>>16}
         jsr     Sys_VIA_USB_Char_TX
 
-        ; Send the hardware base IO address ($00:7F00) again.
-        lda     #$00
+        ; Send the hardware vector address.
+        lda     #<CPU_VECTOR_START
         jsr     Sys_VIA_USB_Char_TX
-        lda     #$7F
+        lda     #>CPU_VECTOR_START
         jsr     Sys_VIA_USB_Char_TX
-        LDA     #$00
-        jsr     Sys_VIA_USB_Char_TX
-
-        ; Send $00:7FFF. Not sure what this is, but it's the last byte of RAM.
-        lda     #$FF
-        jsr     Sys_VIA_USB_Char_TX
-        lda     #$7F
-        jsr     Sys_VIA_USB_Char_TX
-        LDA     #$00
+        LDA     #{CPU_VECTOR_START>>16}
         jsr     Sys_VIA_USB_Char_TX
 
-        ; Send $FF:FFFF. Not sure what it's used for.
-        lda     #$FF
+        ; Send the hardware base IO address.
+        lda     #<HW_IO_START
         jsr     Sys_VIA_USB_Char_TX
-        lda     #$FF
+        lda     #>HW_IO_START
         jsr     Sys_VIA_USB_Char_TX
-        lda     #$FF
+        LDA     #{HW_IO_START>>16}
+        jsr     Sys_VIA_USB_Char_TX
+
+        ; Not sure, but assume this is the last byte of the hardware IO area.
+        lda     #<{HW_IO_START + HW_IO_SIZE - 1}
+        jsr     Sys_VIA_USB_Char_TX
+        lda     #>{HW_IO_START + HW_IO_SIZE - 1}
+        jsr     Sys_VIA_USB_Char_TX
+        LDA     #{{HW_IO_START + HW_IO_SIZE - 1}>>16}
+        jsr     Sys_VIA_USB_Char_TX
+
+        ; Send the hardware breakpoint address.
+        lda     #<HW_BRK_ADDR
+        jsr     Sys_VIA_USB_Char_TX
+        lda     #>HW_BRK_ADDR
+        jsr     Sys_VIA_USB_Char_TX
+        lda     #{HW_BRK_ADDR>>16}
         jmp     Sys_VIA_USB_Char_TX
 
 ; Debugger command 5. Restore the CPU context and execute from the saved context.

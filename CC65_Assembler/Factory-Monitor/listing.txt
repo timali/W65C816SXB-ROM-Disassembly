@@ -13,6 +13,17 @@ Current file: W65c816SXB-ROM.s
 000000r 1               ; to restore the assembler back to 8-bit mode. So we'll not use a .A8
 000000r 1               ; or a .I8 every time there is a SEP -- only when it is actually needed.
 000000r 1               
+000000r 1               ; Definitions used in sending info about the monitor (debug command 4).
+000000r 1               BOARD_ID                    := $58
+000000r 1               WORK_RAM_START              := $7E00
+000000r 1               SHADOW_VECTOR_START         := $7EE4
+000000r 1               SHADOW_VECTOR_SIZE          := $01C
+000000r 1               MONITOR_CODE_START          := $8000
+000000r 1               CPU_VECTOR_START            := $FFE4
+000000r 1               HW_IO_START                 := $7F00
+000000r 1               HW_IO_SIZE                  := $0100
+000000r 1               HW_BRK_ADDR                 := $FFFFFF
+000000r 1               
 000000r 1               ; Zero-page variables that are temporarily used when executing commands
 000000r 1               ; from the debugger. When the monitor is entered, their values are saved
 000000r 1               ; into the ZP save area in work RAM (RAM_ZP_SAVE), and restored before
@@ -87,9 +98,6 @@ Current file: W65c816SXB-ROM.s
 000000r 1               NMI_02_ENTRY_VECTOR         := $7E72
 000000r 1               BRK_816_ENTRY_VECTOR        := $7E74
 000000r 1               NMI_816_ENTRY_VECTOR        := $7E76
-000000r 1               
-000000r 1               ; The start of the shadow vectors. There are 14 in total. Not all are used.
-000000r 1               SHADOW_VECTOR_START         := $7EE4
 000000r 1               
 000000r 1               ; Shadow vectors for 816 mode, which the user may set to hook the vector.
 000000r 1               SHADOW_VEC_COP_816          := $7EE4
@@ -824,13 +832,16 @@ Current file: W65c816SXB-ROM.s
 00836C  1               
 00836C  1               ; Debugger command 4. Get System Info.
 00836C  1               Dbg_Cmd_4_Sys_Info:
-00836C  1                       ; Send $00:7E00 to the debugger, which is the start of the monitor
-00836C  1                       ; work-RAM. This same address is also sent later, for some reason.
-00836C  1  A9 00                lda     #$00
+00836C  1                       ; Send the start of the monitor work-RAM. This same address is also sent
+00836C  1                       ; later, for some reason. Not sure if these represent two different things
+00836C  1                       ; which happen to have the same address, but each one seems to be used. If
+00836C  1                       ; this copy is changed to something invalid, the debugger has issues, so it
+00836C  1                       ; seems to be used by the debugger, and not ignored.
+00836C  1  A9 00                lda     #<WORK_RAM_START
 00836E  1  20 2B 86             jsr     Sys_VIA_USB_Char_TX
-008371  1  A9 7E                lda     #$7E
+008371  1  A9 7E                lda     #>WORK_RAM_START
 008373  1  20 2B 86             jsr     Sys_VIA_USB_Char_TX
-008376  1  A9 00                lda     #$00
+008376  1  A9 00                lda     #^WORK_RAM_START
 008378  1  20 2B 86             JSR     Sys_VIA_USB_Char_TX
 00837B  1               
 00837B  1                       ; Auto-detected CPU type.
@@ -838,23 +849,25 @@ Current file: W65c816SXB-ROM.s
 00837E  1  20 2B 86             JSR     Sys_VIA_USB_Char_TX
 008381  1               
 008381  1                       ; Board ID.
-008381  1  A9 58                lda     #$58
+008381  1  A9 58                lda     #BOARD_ID
 008383  1  20 2B 86             JSR     Sys_VIA_USB_Char_TX
 008386  1               
-008386  1                       ; Send $00:7E00 to the debugger again.
-008386  1  A9 00                lda     #$00
+008386  1                       ; Send the work-RAM start address again. Not sure why, but this copy is
+008386  1                       ; the value that is displayed in the "Target Connection Information"
+008386  1                       ; screen on the debugger, so this copy is used, and not ignored.
+008386  1  A9 00                lda     #<WORK_RAM_START
 008388  1  20 2B 86             jsr     Sys_VIA_USB_Char_TX
-00838B  1  A9 7E                lda     #$7E
+00838B  1  A9 7E                lda     #>WORK_RAM_START
 00838D  1  20 2B 86             jsr     Sys_VIA_USB_Char_TX
-008390  1  A9 00                LDA     #$00
+008390  1  A9 00                LDA     #^WORK_RAM_START
 008392  1  20 2B 86             jsr     Sys_VIA_USB_Char_TX
 008395  1               
-008395  1                       ; Send the monitor ROM address ($00:8000).
-008395  1  A9 00                lda     #$00
+008395  1                       ; Send the monitor code starting address.
+008395  1  A9 00                lda     #<MONITOR_CODE_START
 008397  1  20 2B 86             jsr     Sys_VIA_USB_Char_TX
-00839A  1  A9 80                lda     #$80
+00839A  1  A9 80                lda     #>MONITOR_CODE_START
 00839C  1  20 2B 86             jsr     Sys_VIA_USB_Char_TX
-00839F  1  A9 00                lda     #$00
+00839F  1  A9 00                lda     #^MONITOR_CODE_START
 0083A1  1  20 2B 86             JSR     Sys_VIA_USB_Char_TX
 0083A4  1               
 0083A4  1                       ; Shadow vector start (24-bit address, LSB-first).
@@ -862,47 +875,47 @@ Current file: W65c816SXB-ROM.s
 0083A6  1  20 2B 86             jsr     Sys_VIA_USB_Char_TX
 0083A9  1  A9 7E                LDA     #>SHADOW_VECTOR_START
 0083AB  1  20 2B 86             JSR     Sys_VIA_USB_Char_TX
-0083AE  1  A9 00                lda     #$00
+0083AE  1  A9 00                lda     #^SHADOW_VECTOR_START
 0083B0  1  20 2B 86             JSR     Sys_VIA_USB_Char_TX
 0083B3  1               
-0083B3  1                       ; Send the hardware base IO address ($00:7F00).
-0083B3  1  A9 00                lda     #$00
+0083B3  1                       ; Shadow vector end address + 1.
+0083B3  1  A9 00                lda     #<(SHADOW_VECTOR_START + SHADOW_VECTOR_SIZE)
 0083B5  1  20 2B 86             jsr     Sys_VIA_USB_Char_TX
-0083B8  1  A9 7F                lda     #$7F
+0083B8  1  A9 7F                lda     #>(SHADOW_VECTOR_START + SHADOW_VECTOR_SIZE)
 0083BA  1  20 2B 86             jsr     Sys_VIA_USB_Char_TX
-0083BD  1  A9 00                LDA     #$00
+0083BD  1  A9 00                LDA     #^(SHADOW_VECTOR_START + SHADOW_VECTOR_SIZE)
 0083BF  1  20 2B 86             jsr     Sys_VIA_USB_Char_TX
 0083C2  1               
-0083C2  1                       ; Send the hardware vector address ($00:FFE4).
-0083C2  1  A9 E4                lda     #$E4
+0083C2  1                       ; Send the hardware vector address.
+0083C2  1  A9 E4                lda     #<CPU_VECTOR_START
 0083C4  1  20 2B 86             jsr     Sys_VIA_USB_Char_TX
-0083C7  1  A9 FF                lda     #$FF
+0083C7  1  A9 FF                lda     #>CPU_VECTOR_START
 0083C9  1  20 2B 86             jsr     Sys_VIA_USB_Char_TX
-0083CC  1  A9 00                LDA     #$00
+0083CC  1  A9 00                LDA     #^CPU_VECTOR_START
 0083CE  1  20 2B 86             jsr     Sys_VIA_USB_Char_TX
 0083D1  1               
-0083D1  1                       ; Send the hardware base IO address ($00:7F00) again.
-0083D1  1  A9 00                lda     #$00
+0083D1  1                       ; Send the hardware base IO address.
+0083D1  1  A9 00                lda     #<HW_IO_START
 0083D3  1  20 2B 86             jsr     Sys_VIA_USB_Char_TX
-0083D6  1  A9 7F                lda     #$7F
+0083D6  1  A9 7F                lda     #>HW_IO_START
 0083D8  1  20 2B 86             jsr     Sys_VIA_USB_Char_TX
-0083DB  1  A9 00                LDA     #$00
+0083DB  1  A9 00                LDA     #^HW_IO_START
 0083DD  1  20 2B 86             jsr     Sys_VIA_USB_Char_TX
 0083E0  1               
-0083E0  1                       ; Send $00:7FFF. Not sure what this is, but it's the last byte of RAM.
-0083E0  1  A9 FF                lda     #$FF
+0083E0  1                       ; Not sure, but assume this is the last byte of the hardware IO area.
+0083E0  1  A9 FF                lda     #<(HW_IO_START + HW_IO_SIZE - 1)
 0083E2  1  20 2B 86             jsr     Sys_VIA_USB_Char_TX
-0083E5  1  A9 7F                lda     #$7F
+0083E5  1  A9 7F                lda     #>(HW_IO_START + HW_IO_SIZE - 1)
 0083E7  1  20 2B 86             jsr     Sys_VIA_USB_Char_TX
-0083EA  1  A9 00                LDA     #$00
+0083EA  1  A9 00                LDA     #^(HW_IO_START + HW_IO_SIZE - 1)
 0083EC  1  20 2B 86             jsr     Sys_VIA_USB_Char_TX
 0083EF  1               
-0083EF  1                       ; Send $FF:FFFF. Not sure what it's used for.
-0083EF  1  A9 FF                lda     #$FF
+0083EF  1                       ; Send the hardware breakpoint address.
+0083EF  1  A9 FF                lda     #<HW_BRK_ADDR
 0083F1  1  20 2B 86             jsr     Sys_VIA_USB_Char_TX
-0083F4  1  A9 FF                lda     #$FF
+0083F4  1  A9 FF                lda     #>HW_BRK_ADDR
 0083F6  1  20 2B 86             jsr     Sys_VIA_USB_Char_TX
-0083F9  1  A9 FF                lda     #$FF
+0083F9  1  A9 FF                lda     #^HW_BRK_ADDR
 0083FB  1  4C 2B 86             jmp     Sys_VIA_USB_Char_TX
 0083FE  1               
 0083FE  1               ; Debugger command 5. Restore the CPU context and execute from the saved context.
