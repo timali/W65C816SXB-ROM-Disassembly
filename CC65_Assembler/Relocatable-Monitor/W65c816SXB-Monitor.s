@@ -15,6 +15,48 @@
 ; control is returned to the user's program, so their use by the debugger
 ; and monitor is transparent to the user.
 
+; Imports. These are all exported by the linker.
+        .import __HW_IO_ADDR__
+        .import __HW_IO_SIZE__
+        .import __VIA_USB_ADDR__
+        .import __HW_BRK_ADDR__
+        .import __WORK_RAM_LOAD__
+        .import __SHADOW_VECTORS_LOAD__
+        .import __SHADOW_VECTORS_SIZE__
+        .import __CODE_LOAD__
+        .import __CPU_VECTORS_LOAD__
+
+; Export some useful symbols so they are shown in the map file.
+        .export RAM_A_SAVE
+        .export RAM_X_SAVE
+        .export RAM_Y_SAVE
+        .export RAM_PC_SAVE
+        .export RAM_DP_SAVE
+        .export RAM_SP_SAVE
+        .export RAM_P_SAVE
+        .export RAM_E_SAVE
+        .export RAM_PB_SAVE
+        .export RAM_DB_SAVE
+        .export RAM_CPU_TYPE
+        .export RAM_IN_MONITOR
+        .export RAM_ZP_SAVE
+        .export IRQ_02_ENTRY_VECTOR
+        .export NMI_02_ENTRY_VECTOR
+        .export BRK_816_ENTRY_VECTOR
+        .export NMI_816_ENTRY_VECTOR
+        .export SHADOW_VEC_COP_816
+        .export SHADOW_VEC_ABORT_816
+        .export SHADOW_VEC_IRQ_816
+        .export SHADOW_VEC_COP_02
+        .export SHADOW_VEC_ABORT_02
+        .export SHADOW_VEC_IRQ_02
+        .export Monitor_Start
+        .export Pointer_Table
+        .export RESET_entry
+
+; Symbol definitions.
+BOARD_ID                        := $58
+
         .zeropage
 
 ; Varibales used by the debugger. They are copied and restored to work-
@@ -93,7 +135,6 @@ NMI_02_ENTRY_VECTOR:            .res 2
 BRK_816_ENTRY_VECTOR:           .res 2
 NMI_816_ENTRY_VECTOR:           .res 2
 
-        .import __SHADOW_VECTORS_LOAD__
         .segment "SHADOW_VECTORS"
 
 ; Shadow vectors for 816 mode, which the user may set to hook the vector.
@@ -120,22 +161,22 @@ SHADOW_VEC_IRQ_02:              .res 2
 
 ; IO for the VIA which is used for the USB debugger interface.
 ; Unused registers are commented-out.
-SYSTEM_VIA_IOB:                 .res 1 ; Port B IO register
-SYSTEM_VIA_IOA:                 .res 1 ; Port A IO register
-SYSTEM_VIA_DDRB:                .res 1 ; Port B data direction register
-SYSTEM_VIA_DDRA:                .res 1 ; Port A data direction register
-SYSTEM_VIA_T1C_L:               .res 1 ; (Unused) Timer 1 counter/latches, low-order
-SYSTEM_VIA_T1C_H:               .res 1 ; (Unused) Timer 1 high-order counter
-SYSTEM_VIA_T1L_L:               .res 1 ; (Unused) Timer 1 low-order latches
-SYSTEM_VIA_T1L_H:               .res 1 ; (Unused) Timer 1 high-order latches
-SYSTEM_VIA_T2C_L:               .res 1 ; (Unused) Timer 2 counter/latches, lower-order
-SYSTEM_VIA_T2C_H:               .res 1 ; (Unused) Timer 2 high-order counter
-SYSTEM_VIA_SR:                  .res 1 ; (Unused) Shift register
-SYSTEM_VIA_ACR:                 .res 1 ; Auxilliary control register
-SYSTEM_VIA_PCR:                 .res 1 ; Peripheral control register
-SYSTEM_VIA_IFR:                 .res 1 ; (Unused) Interrupt flag register
-SYSTEM_VIA_IER:                 .res 1 ; (Unused) Interrupt enable register
-SYSTEM_VIA_ORA_IRA:             .res 1 ; (Unused) Port A IO register, but no handshake
+SYSTEM_VIA_IOB          := __VIA_USB_ADDR__ + $00 ; Port B IO register
+SYSTEM_VIA_IOA          := __VIA_USB_ADDR__ + $01 ; Port A IO register
+SYSTEM_VIA_DDRB         := __VIA_USB_ADDR__ + $02 ; Port B data direction register
+SYSTEM_VIA_DDRA         := __VIA_USB_ADDR__ + $03 ; Port A data direction register
+;SYSTEM_VIA_T1C_L       := __VIA_USB_ADDR__ + $04 ; Timer 1 counter/latches, low-order
+;SYSTEM_VIA_T1C_H       := __VIA_USB_ADDR__ + $05 ; Timer 1 high-order counter
+;SYSTEM_VIA_T1L_L       := __VIA_USB_ADDR__ + $06 ; Timer 1 low-order latches
+;SYSTEM_VIA_T1L_H       := __VIA_USB_ADDR__ + $07 ; Timer 1 high-order latches
+;SYSTEM_VIA_T2C_L       := __VIA_USB_ADDR__ + $08 ; Timer 2 counter/latches, lower-order
+;SYSTEM_VIA_T2C_H       := __VIA_USB_ADDR__ + $09 ; Timer 2 high-order counter
+;SYSTEM_VIA_SR          := __VIA_USB_ADDR__ + $0A ; Shift register
+SYSTEM_VIA_ACR          := __VIA_USB_ADDR__ + $0B ; Auxilliary control register
+SYSTEM_VIA_PCR          := __VIA_USB_ADDR__ + $0C ; Peripheral control register
+;SYSTEM_VIA_IFR         := __VIA_USB_ADDR__ + $0D ; Interrupt flag register
+;SYSTEM_VIA_IER         := __VIA_USB_ADDR__ + $0E ; Interrupt enable register
+;SYSTEM_VIA_ORA_IRA     := __VIA_USB_ADDR__ + $0F ; Port A IO register, but no handshake
 
         ; This is the start of the monitor code, placed in the code section.
         .code
@@ -804,13 +845,16 @@ Dbg_Cmd_3_Read_Mem:
 
 ; Debugger command 4. Get System Info.
 Dbg_Cmd_4_Sys_Info:
-        ; Send $00:7E00 to the debugger, which is the start of the monitor
-        ; work-RAM. This same address is also sent later, for some reason.
-        lda     #$00
+        ; Send the start of the monitor work-RAM. This same address is also sent
+        ; later, for some reason. Not sure if these represent two different things
+        ; which happen to have the same address, but each one seems to be used. If
+        ; this copy is changed to something invalid, the debugger has issues, so it
+        ; seems to be used by the debugger, and not ignored.
+        lda     #<__WORK_RAM_LOAD__
         jsr     Sys_VIA_USB_Char_TX
-        lda     #$7E
+        lda     #>__WORK_RAM_LOAD__
         jsr     Sys_VIA_USB_Char_TX
-        lda     #$00
+        lda     #^__WORK_RAM_LOAD__
         JSR     Sys_VIA_USB_Char_TX
 
         ; Auto-detected CPU type.
@@ -818,23 +862,25 @@ Dbg_Cmd_4_Sys_Info:
         JSR     Sys_VIA_USB_Char_TX
 
         ; Board ID.
-        lda     #$58
+        lda     #BOARD_ID
         JSR     Sys_VIA_USB_Char_TX
 
-        ; Send $00:7E00 to the debugger again.
-        lda     #$00
+        ; Send the work-RAM start address again. Not sure why, but this copy is
+        ; the value that is displayed in the "Target Connection Information"
+        ; screen on the debugger, so this copy is used, and not ignored.
+        lda     #<__WORK_RAM_LOAD__
         jsr     Sys_VIA_USB_Char_TX
-        lda     #$7E
+        lda     #>__WORK_RAM_LOAD__
         jsr     Sys_VIA_USB_Char_TX
-        LDA     #$00
+        LDA     #^__WORK_RAM_LOAD__
         jsr     Sys_VIA_USB_Char_TX
 
-        ; Send the monitor ROM address ($00:8000).
-        lda     #$00
+        ; Send the monitor code starting address.
+        lda     #<__CODE_LOAD__
         jsr     Sys_VIA_USB_Char_TX
-        lda     #$80
+        lda     #>__CODE_LOAD__
         jsr     Sys_VIA_USB_Char_TX
-        lda     #$00
+        lda     #^__CODE_LOAD__
         JSR     Sys_VIA_USB_Char_TX
 
         ; Shadow vector start (24-bit address, LSB-first).
@@ -842,47 +888,47 @@ Dbg_Cmd_4_Sys_Info:
         jsr     Sys_VIA_USB_Char_TX
         LDA     #>__SHADOW_VECTORS_LOAD__
         JSR     Sys_VIA_USB_Char_TX
-        lda     #$00
+        lda     #^__SHADOW_VECTORS_LOAD__
         JSR     Sys_VIA_USB_Char_TX
 
-        ; Send the hardware base IO address ($00:7F00).
-        lda     #$00
+        ; Shadow vector end address + 1.
+        lda     #<(__SHADOW_VECTORS_LOAD__ + __SHADOW_VECTORS_SIZE__)
         jsr     Sys_VIA_USB_Char_TX
-        lda     #$7F
+        lda     #>(__SHADOW_VECTORS_LOAD__ + __SHADOW_VECTORS_SIZE__)
         jsr     Sys_VIA_USB_Char_TX
-        LDA     #$00
-        jsr     Sys_VIA_USB_Char_TX
-
-        ; Send the hardware vector address ($00:FFE4).
-        lda     #$E4
-        jsr     Sys_VIA_USB_Char_TX
-        lda     #$FF
-        jsr     Sys_VIA_USB_Char_TX
-        LDA     #$00
+        LDA     #^(__SHADOW_VECTORS_LOAD__ + __SHADOW_VECTORS_SIZE__)
         jsr     Sys_VIA_USB_Char_TX
 
-        ; Send the hardware base IO address ($00:7F00) again.
-        lda     #$00
+        ; Send the hardware vector address.
+        lda     #<__CPU_VECTORS_LOAD__
         jsr     Sys_VIA_USB_Char_TX
-        lda     #$7F
+        lda     #>__CPU_VECTORS_LOAD__
         jsr     Sys_VIA_USB_Char_TX
-        LDA     #$00
-        jsr     Sys_VIA_USB_Char_TX
-
-        ; Send $00:7FFF. Not sure what this is, but it's the last byte of RAM.
-        lda     #$FF
-        jsr     Sys_VIA_USB_Char_TX
-        lda     #$7F
-        jsr     Sys_VIA_USB_Char_TX
-        LDA     #$00
+        LDA     #^__CPU_VECTORS_LOAD__
         jsr     Sys_VIA_USB_Char_TX
 
-        ; Send $FF:FFFF. Not sure what it's used for.
-        lda     #$FF
+        ; Send the hardware base IO address.
+        lda     #<__HW_IO_ADDR__
         jsr     Sys_VIA_USB_Char_TX
-        lda     #$FF
+        lda     #>__HW_IO_ADDR__
         jsr     Sys_VIA_USB_Char_TX
-        lda     #$FF
+        LDA     #^__HW_IO_ADDR__
+        jsr     Sys_VIA_USB_Char_TX
+
+        ; Not sure, but assume this is the last byte of the hardware IO area.
+        lda     #<(__HW_IO_ADDR__ + __HW_IO_SIZE__ - 1)
+        jsr     Sys_VIA_USB_Char_TX
+        lda     #>(__HW_IO_ADDR__ + __HW_IO_SIZE__ - 1)
+        jsr     Sys_VIA_USB_Char_TX
+        LDA     #^(__HW_IO_ADDR__ + __HW_IO_SIZE__ - 1)
+        jsr     Sys_VIA_USB_Char_TX
+
+        ; Send the hardware breakpoint address.
+        lda     #<__HW_BRK_ADDR__
+        jsr     Sys_VIA_USB_Char_TX
+        lda     #>__HW_BRK_ADDR__
+        jsr     Sys_VIA_USB_Char_TX
+        lda     #^__HW_BRK_ADDR__
         jmp     Sys_VIA_USB_Char_TX
 
 ; Debugger command 5. Restore the CPU context and execute from the saved context.
@@ -1603,8 +1649,6 @@ Do_Nothing_Subroutine_3:
         .segment "CPU_VECTORS"
 
         ; 65816 Native-Mode Vectors
-RSVD_FFE0:  .addr   $FFFF               ; $FFE0
-RSVD_FFE2:  .addr   $FFFF               ; $FFE2
 COP_816:    .addr   COP_816_entry       ; $FFE4
 BRK_816:    .addr   BRK_816_entry       ; $FFE6
 ABORT_816:  .addr   ABORT_816_entry     ; $FFE8
