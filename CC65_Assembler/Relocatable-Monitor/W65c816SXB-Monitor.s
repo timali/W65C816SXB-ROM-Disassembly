@@ -188,9 +188,7 @@ Signature_String:
         .byte   $82,"$",$01,$FF
 
 Monitor_Version_String:
-        .byte   "WDC65c816SK WDCMON Version =  2"
-        .byte   ".0.4.3Version Date = Wed Mar 26"
-        .byte   " 2014  2:46", $00
+        .asciiz   "WDC65c816SK WDCMON Version =  2.0.4.3Version Date = Wed Mar 26 2014  2:46"
 
         .segment "POINTER_TABLE"
 
