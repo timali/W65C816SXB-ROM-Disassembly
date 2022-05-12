@@ -1,0 +1,5 @@
+*.o
+/CC65_Assembler/Relocatable-Monitor/listing.txt
+/CC65_Assembler/Relocatable-Monitor/map.txt
+WDCDB.INI
+/CC65_Assembler/Relocatable-Monitor/W65c816SXB-Monitor.bin
