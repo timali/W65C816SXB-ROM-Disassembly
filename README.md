@@ -78,7 +78,7 @@ Once the user's application is running, then if the monitor interrupts the appli
 Before the user's application is executed again, these memory locations are restored from the save area in work-RAM. Therefore, although the monitor uses these memory locations, this usage is transparent to the user's application, and so the user's application is free to use this memory area.
 
 ### "Raw" Vectors
-These are vectors in work-RAM, so they may be overridden by the user application, but they typically are not, because they typically perform functions necessary for the monitor and debugger to work correctly. Instead, if is reasonable for the user to handle a particular vector, then the default handler will call the user's handler through the corresponding shadow vector.
+These are vectors in work-RAM, so they may be overridden by the user application, but they typically are not, because they typically perform functions necessary for the monitor and debugger to work correctly. Instead, if it is reasonable for the user to handle a particular vector, then the default handler will call the user's handler through the corresponding shadow vector.
 
 #### IRQ_02:	$7E70, IRQ Handler for 6502 Emulation Mode
 Upon RESET, this vector is initialized to `IRQ_02_Entry_Vector_Default`. Since IRQ and BRK share a vector in 6502 mode, the default handler checks to see if a BRK or IRQ occurred. If an IRQ occurred, then the user's shadow vector `SHADOW_VEC_IRQ_02` is called. If a BRK was executed, the monitor breaks into the debugger with code `$02`, allowing the debugger to gain control of the machine.
