@@ -25,13 +25,13 @@ Very little information is publicly available about the monitor, for example, wh
 
  ## CC65-Assembler, Relocatable Version
 
- This is another CC65 version. It is relocatable by modifying the linger config file, which is useful if
+ This is another CC65 version. It is relocatable by modifying the linker config file, which is useful if
  you want to modify the monitor code, or especially if you want to rebuild it to run on different hardware.
  Currently, it is configured to build an exact duplicate of the factory image.
 
  ## Kowalski/Richter-Assembler Version
 
-There is a version designed to be assembed by the latest 65816-enabled version of the "6502 Macroassembler & Assembler", originally by Michael Kowalski, but enhanced by Daryl Richter to add 65816 support (https://sbc.rictor.org/kowalski.html). This version is self-contained, and does not need a linker config file.
+This is a version designed to be assembed by the latest 65816-enabled version of the "6502 Macroassembler & Assembler", originally by Michael Kowalski, but enhanced by Daryl Richter to add 65816 support (https://sbc.rictor.org/kowalski.html). This version is self-contained, and does not need a linker config file.
 
 # Debugging Interface Hardware Overview
 The monitor code interacts with a W65C22S6 (VIA), which is connected to an FTDI FT245RL USB FIFO. Together, these components act like a reliable and very high-speed UART connection to the host PC, complete with flow control. This allows the debugger and monitor to communicate at a very high speed (>800 kbit/sec).
